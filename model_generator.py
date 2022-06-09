@@ -59,7 +59,7 @@ if __name__ == "__main__":
         design, model = rand_model(input_shape=(input_size, ),
                                    num_output=output_size)
 
-        """ model.summary()
+        model.summary()
 
         model.compile(optimizer=Adam(learning_rate=0.01),
                       loss=CategoricalCrossentropy(from_logits=True),
@@ -68,7 +68,7 @@ if __name__ == "__main__":
         history = model.fit(features, targets, epochs=100, verbose=0)
 
         print("loss =", history.history['loss'][-1])
-        print("acc =", history.history['accuracy'][-1]) """
+        print("acc =", history.history['accuracy'][-1])
 
         # This part appends the model to text file
         # Design
@@ -78,6 +78,13 @@ if __name__ == "__main__":
             np.savetxt(designs_file, design, fmt="%d, ", newline="")
             designs_file.write("\n")
 
-        # Weights
+        for layer in model.layers:
+            weights = layer.get_weights()
+            # Weights
+            with open(TARGET_DIR + 'model_weights.txt', 'a') as weights_file:
+                np.savetxt(weights_file, weights[0], delimiter=", ")
 
-        # Biases
+            # Biases
+            with open(TARGET_DIR + 'model_biases.txt', 'a') as biases_file:
+                np.savetxt(biases_file, weights[1], newline=", ")
+                biases_file.write("\n")
