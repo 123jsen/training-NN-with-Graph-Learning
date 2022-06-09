@@ -12,9 +12,6 @@ from keras.losses import CategoricalCrossentropy
 MAX_DEPTH = 5
 LAYER_HEIGHTS = (4, 8, 16, 32, 64)
 
-NUM_MODELS = 10
-TARGET_DIR = "./data/dataset_1/"
-
 
 ### Functions ###
 def rand_design():
@@ -43,28 +40,32 @@ def rand_model(input_shape=(32,), num_output=2):
     return design, create_model(design, input_shape, num_output)
 
 
-### Main Function ###
-if __name__ == "__main__":
+def prepare_model_data(num_models=10, target_dir="./dataset_1/"):
     '''Read the data from the csv files, trains a bunch of NNs, and store them at the folder'''
-    features = np.genfromtxt(TARGET_DIR + 'data_features.csv', delimiter=', ')
-    targets = np.genfromtxt(TARGET_DIR + 'data_targets.csv', delimiter=', ')
+    features = np.genfromtxt(target_dir + 'data_features.csv', delimiter=', ')
+    targets = np.genfromtxt(target_dir + 'data_targets.csv', delimiter=', ')
 
     input_size = features[0].shape[0]
     output_size = targets.shape[1]
 
-    print("Input Size =", input_size, "Output Size =", output_size)
+    print(f"Input Size = {input_size}, Output Size = {output_size}")
 
-    for _ in range(NUM_MODELS):
+    for i in range(num_models):
+        print(f"Generating the {i}-th model")
         # This part trains the model
         design, model = rand_model(input_shape=(input_size, ),
                                    num_output=output_size)
 
-        model.summary()
+        # model.summary()
+
+        design = np.concatenate(([input_size], design, [output_size]))
+        print("\nDesign =", design)
 
         model.compile(optimizer=Adam(learning_rate=0.01),
                       loss=CategoricalCrossentropy(from_logits=True),
                       metrics=['accuracy'])
 
+        print("Training...")
         history = model.fit(features, targets, epochs=100, verbose=0)
 
         print("loss =", history.history['loss'][-1])
@@ -72,19 +73,25 @@ if __name__ == "__main__":
 
         # This part appends the model to text file
         # Design
-        design = np.concatenate(([input_size], design, [output_size]))
-        print("Design =", design)
-        with open(TARGET_DIR + 'model_designs.txt', 'a') as designs_file:
+        with open(target_dir + 'model_designs.txt', 'a') as designs_file:
             np.savetxt(designs_file, design, fmt="%d, ", newline="")
             designs_file.write("\n")
+
 
         for layer in model.layers:
             weights = layer.get_weights()
             # Weights
-            with open(TARGET_DIR + 'model_weights.txt', 'a') as weights_file:
+            with open(target_dir + 'model_weights.txt', 'a') as weights_file:
                 np.savetxt(weights_file, weights[0], delimiter=", ")
 
             # Biases
-            with open(TARGET_DIR + 'model_biases.txt', 'a') as biases_file:
+            with open(target_dir + 'model_biases.txt', 'a') as biases_file:
                 np.savetxt(biases_file, weights[1], newline=", ")
                 biases_file.write("\n")
+
+        print("Model data written to file")
+
+
+### Main Function ###
+if __name__ == "__main__":
+    prepare_model_data(num_models=10)
