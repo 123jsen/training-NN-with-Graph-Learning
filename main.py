@@ -1,5 +1,5 @@
-import gen_model
+import model_generator
 
-model = gen_model.rand_model(input_shape=(784,), num_output=10)
+model = model_generator.rand_model(input_shape=(784,), num_output=10)
 
 model.summary()
