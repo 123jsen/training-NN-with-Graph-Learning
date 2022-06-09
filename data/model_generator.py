@@ -51,7 +51,9 @@ def prepare_model_data(num_models=10, target_dir="./dataset_1/"):
     print(f"Input Size = {input_size}, Output Size = {output_size}")
 
     for i in range(num_models):
-        print(f"Generating the {i}-th model")
+        print('\n')
+        print(f"Generating the {i+1}-th model")
+
         # This part trains the model
         design, model = rand_model(input_shape=(input_size, ),
                                    num_output=output_size)
@@ -59,7 +61,7 @@ def prepare_model_data(num_models=10, target_dir="./dataset_1/"):
         # model.summary()
 
         design = np.concatenate(([input_size], design, [output_size]))
-        print("\nDesign =", design)
+        print("Design =", design)
 
         model.compile(optimizer=Adam(learning_rate=0.01),
                       loss=CategoricalCrossentropy(from_logits=True),
