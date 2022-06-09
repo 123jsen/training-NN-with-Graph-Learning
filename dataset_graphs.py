@@ -37,6 +37,8 @@ class NNDataset(dataset.Dataset):
        We will first experiment whether we can predict biases'''
 
     def read(self):
+        print("Reading Data from text files")
+
         output = []
 
         for data_source in SOURCES:
@@ -55,38 +57,50 @@ class NNDataset(dataset.Dataset):
             designs = read_designs(data_source + "model_designs.txt")
             print(f"Number of models: {len(designs)}")
 
-            for design in designs:
-                num_nodes = sum(design)
+            with open(data_source + "model_weights.txt", 'r') as weights_file, open(data_source + "model_biases.txt", 'r') as biases_file:
+                for design in designs:
+                    num_nodes = sum(design)
 
-                print(f"Design = {design}, {num_nodes} nodes in total")
+                    # Adjacency Matrix - Assumes that all layers are Dense
+                    a = np.zeros((num_nodes, num_nodes))
 
-                # Adjacency Matrix - Assumes that all layers are Dense
-                a = np.zeros((num_nodes, num_nodes))
+                    # lower bound
+                    lb = 0
+                    for index, height in enumerate(design):
+                        if (index == len(design) - 1):
+                            break
 
-                # lower bound
-                lb = 0
-                for index, height in enumerate(design):
-                    if (index == len(design) - 1):
-                        break
+                        for i in range(height):
+                            for j in range(height, height + design[index + 1]):
+                                a[lb + i][lb + j] = 1
 
-                    for i in range(height):
-                        for j in range(height, height + design[index + 1]):
-                            a[lb + i][lb + j] = 1
+                        lb += height
 
-                    lb += height
+                    if not(EDGES_DIRECTED):
+                        a += a.T
 
-                if not(EDGES_DIRECTED):
-                    a += a.T
+                    # Node Features
 
-                # Node Features
+                    # Edge Features
 
-                # Edge Features
+                    # Labels
+                    y = np.zeros(0)
+                    for index, height in enumerate(design):
+                        # First rows do not have biases -> all zero
+                        if (index == 0):
+                            y = np.zeros((height, ))
+                            continue
 
-                # Labels
+                        # Read biases values line by line
+                        biases = biases_file.readline()
+                        biases = np.fromstring(biases, dtype=float, sep=', ')
+                        y = np.concatenate((y, biases))
 
-                """ output.append(
-                    graph.Graph(x=x, a=a, )
-                ) """
+                    output.append(
+                        graph.Graph(a=a, y=y)
+                    )
+
+        return output
 
 
 if __name__ == "__main__":
