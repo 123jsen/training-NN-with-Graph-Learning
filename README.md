@@ -25,8 +25,12 @@ There should be a `data` folder, and inside of the data folder, there are folder
 
 ## Purpose of each File
 
+These files are related to training data generation:
+
 - `data/dataset_generator.py`: Creates a random dataset using scikit-learn's make-classification function
 - `data/model_generator.py`: Generates a random and trained dense NN model based on a dataset
 - `data/main.py`: Using the two python scripts, generate multiple datasets with the training data and trained NNs
+
+These files are related to training the GNN:
 
 - `dataset_graphs.py`: Converts the datasets into the dataset object in Spektral API

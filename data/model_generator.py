@@ -51,7 +51,8 @@ def prepare_model_data(num_models=10, target_dir="./dataset_1/"):
     print(f"Input Size = {input_size}, Output Size = {output_size}")
 
     for i in range(num_models):
-        print('\n')
+        print()
+
         print(f"Generating the {i+1}-th model")
 
         # This part trains the model
