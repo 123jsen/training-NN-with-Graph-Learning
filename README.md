@@ -10,11 +10,11 @@ There should be a `data` folder, and inside of the data folder, there are folder
 .
 ├── data
 |   ├── dataset_1
-|   |   ├── data_features
-|   |   ├── data_targets
-|   |   ├── model_design
-|   |   ├── model_weights
-|   |   └── model_biases
+|   |   ├── data_features.csv
+|   |   ├── data_targets.csv
+|   |   ├── model_designs.txt
+|   |   ├── model_weights.txt
+|   |   └── model_biases.txt
 |   ├── dataset_2
 |   └── ...
 └── ...
