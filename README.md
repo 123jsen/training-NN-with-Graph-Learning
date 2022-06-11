@@ -9,11 +9,11 @@ I've tried using Spektral, which is based on Keras/Tensorflow, and some legacy c
 ## Training Data Structure
 Since Training Data is a collection of graphs, the data is more structured than the usual ML training data.
 
-There should be a `data` folder, and inside of the data folder, there are folders for models trained using different datasets.
+There should be a `raw` folder, and inside of the raw folder, there are folders for models trained using different datasets.
 
 ```
 .
-├── data
+├── raw
 |   ├── dataset_1
 |   |   ├── data_features.csv
 |   |   ├── data_targets.csv
@@ -25,13 +25,15 @@ There should be a `data` folder, and inside of the data folder, there are folder
 └── ...
 ```
 
+The pytorch program will also create a `processed` folder for storing the processed graph data. This folder should be ignored by git.
+
 ## Purpose of each File
 
 These files are related to training data generation:
 
-- `data/dataset_generator.py`: Creates a random dataset using scikit-learn's make-classification function
-- `data/model_generator.py`: Generates a random and trained dense NN model based on a dataset
-- `data/main.py`: Using the two python scripts, generate multiple datasets with the training data and trained NNs
+- `raw/dataset_generator.py`: Creates a random dataset using scikit-learn's make-classification function
+- `raw/model_generator.py`: Generates a random and trained dense NN model based on a dataset
+- `raw/main.py`: Using the two python scripts, generate multiple datasets with the training data and trained NNs
 
 These files are related to training the GNN:
 

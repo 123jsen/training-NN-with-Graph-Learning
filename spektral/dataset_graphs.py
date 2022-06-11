@@ -5,7 +5,7 @@ from spektral.data import graph, dataset
 
 ### Constants ###
 EDGES_DIRECTED = False
-SOURCES = ["../data/dataset_1/", "../data/dataset_2/", "../data/dataset_3/"]
+SOURCES = ["./raw/dataset_1/", "./raw/dataset_2/", "./raw/dataset_3/"]
 
 
 def read_designs(path):
