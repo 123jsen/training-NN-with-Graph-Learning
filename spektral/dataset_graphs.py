@@ -5,7 +5,7 @@ from spektral.data import graph, dataset
 
 ### Constants ###
 EDGES_DIRECTED = False
-SOURCES = ["./data/dataset_1/", "./data/dataset_2/", "./data/dataset_3/"]
+SOURCES = ["../data/dataset_1/", "../data/dataset_2/", "../data/dataset_3/"]
 
 
 def read_designs(path):
@@ -80,6 +80,8 @@ class NNDataset(dataset.Dataset):
                         a += a.T
 
                     # Node Features
+                    # 500 data, 10 deep each
+                    x = np.zeros((num_nodes, 5000))
 
                     # Edge Features
 
@@ -97,7 +99,7 @@ class NNDataset(dataset.Dataset):
                         y = np.concatenate((y, biases))
 
                     output.append(
-                        graph.Graph(a=a, y=y)
+                        graph.Graph(a=a, x=x, y=y)
                     )
 
         return output

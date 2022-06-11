@@ -2,7 +2,9 @@
 Project for CUHK Summer Research Internship
 
 ## Implementation
-The core GNN will be implemented using Spektral, which is a graph learning API based on Keras/Tensorflow.
+The core GNN will be implemented using the PyTorch Geometric library.
+
+I've tried using Spektral, which is based on Keras/Tensorflow, and some legacy code is left behind.
 
 ## Training Data Structure
 Since Training Data is a collection of graphs, the data is more structured than the usual ML training data.
@@ -33,4 +35,5 @@ These files are related to training data generation:
 
 These files are related to training the GNN:
 
-- `dataset_graphs.py`: Converts the datasets into the dataset object in Spektral API
+- `dataset_graphs.py`: Converts the datasets into the dataset object in Torch Geometric/Spektral.
+- `main.py`: Contains GNN model and training code
