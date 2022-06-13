@@ -56,6 +56,8 @@ class NNDataset(InMemoryDataset):
                     # Node input info
                     data.num_nodes = sum(design)
 
+                    # TODO: data.x
+
                     # Sparse adjacency matrix
                     data.edge_index = torch.zeros((2, 0))
 
@@ -68,9 +70,34 @@ class NNDataset(InMemoryDataset):
                                     new_col = torch.cat(
                                         (new_col, torch.tensor([[lb + j], [lb + i]])), axis=1)
 
-                                data.edge_index = torch.cat((data.edge_index, new_col), axis=1)
+                                data.edge_index = torch.cat(
+                                    (data.edge_index, new_col), axis=1)
 
                         lb += height
+
+                    # Edge y
+                    data.y_edge = torch.zeros(0)
+                    for index, height in enumerate(design[:-1]):
+                        for i in range(height):
+                            weights = weights_file.readline()
+                            weights = np.fromstring(weights, dtype=float, sep=', ')
+                            data.y_edge = torch.cat(
+                                (data.y_edge, torch.tensor(weights)))
+
+                    # Node y
+                    data.y_node = torch.zeros(0)
+                    for index, height in enumerate(design):
+                        # First rows do not have biases -> all zero
+                        if (index == 0):
+                            data.y_node = torch.cat(
+                                (data.y_node, torch.zeros(height)))
+                            continue
+
+                        # Read biases values line by line
+                        biases = biases_file.readline()
+                        biases = np.fromstring(biases, dtype=float, sep=', ')
+                        biases = torch.from_numpy(biases)
+                        data.y_node = torch.cat((data.y_node, biases))
 
                     data_list.append(data)
 
