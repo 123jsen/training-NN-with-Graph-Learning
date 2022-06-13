@@ -27,6 +27,62 @@ class NNDataset(InMemoryDataset):
         print("Do you have the correct files at /data folder?")
         exit(1)
 
+    def process(self):
+        if (EDGES_DIRECTED):
+            print("Graph is Directed")
+        else:
+            print("Graph is Undirected")
+
+        data_list = []
+
+        for path in self.raw_paths:
+            # One dataset folder represents multiple NN trained on the same data
+            print(f"Reading from {path}", end=", ")
+
+            features = np.genfromtxt(
+                path + "data_features.csv", delimiter=', ')
+
+            targets = np.genfromtxt(path + "data_targets.csv", delimiter=',')
+
+            designs = self.read_designs(path + "model_designs.txt")
+            print(f"{len(designs)} models loaded")
+
+            with open(path + "model_weights.txt", 'r') as weights_file, open(path + "model_biases.txt", 'r') as biases_file:
+                for design in designs:
+                    # One design is one neural network graph
+                    data = Data()
+                    data.design = design
+
+                    # Node input info
+                    data.num_nodes = sum(design)
+
+                    # Sparse adjacency matrix
+                    data.edge_index = torch.zeros((2, 0))
+
+                    lb = 0      # lower bound
+                    for index, height in enumerate(design[:-1]):
+                        for i in range(height):
+                            for j in range(height, height + design[index + 1]):
+                                new_col = torch.tensor([[lb + i], [lb + j]])
+                                if not(EDGES_DIRECTED):
+                                    new_col = torch.cat(
+                                        (new_col, torch.tensor([[lb + j], [lb + i]])), axis=1)
+
+                                data.edge_index = torch.cat((data.edge_index, new_col), axis=1)
+
+                        lb += height
+
+                    data_list.append(data)
+
+        if self.pre_filter is not None:
+            data_list = [data for data in data_list if self.pre_filter(data)]
+
+        if self.pre_transform is not None:
+            data_list = [self.pre_transform(data) for data in data_list]
+
+        data, slices = self.collate(data_list)
+        torch.save((data, slices), self.processed_paths[0])
+
     def read_designs(self, path):
         """Reads array of designs from given path"""
 
@@ -49,36 +105,3 @@ class NNDataset(InMemoryDataset):
                 designs.append(design)
 
         return designs
-
-    def process(self):
-
-        data_list = []
-
-        for path in self.raw_paths:
-            # One dataset folder represents multiple NN trained on the same data
-            print(f"Reading from {path}", end=", ")
-
-            features = np.genfromtxt(
-                path + "data_features.csv", delimiter=', ')
-
-            targets = np.genfromtxt(path + "data_targets.csv", delimiter=',')
-
-            designs = self.read_designs(path + "model_designs.txt")
-            print(f"{len(designs)} models loaded")
-
-            with open(path + "model_weights.txt", 'r') as weights_file, open(path + "model_biases.txt", 'r') as biases_file:
-                for design in designs:
-                    # One design is one neural network graph
-                    data = Data()
-                    data.num_nodes = sum(design)
-
-                    data_list.append(data)
-
-        if self.pre_filter is not None:
-            data_list = [data for data in data_list if self.pre_filter(data)]
-
-        if self.pre_transform is not None:
-            data_list = [self.pre_transform(data) for data in data_list]
-
-        data, slices = self.collate(data_list)
-        torch.save((data, slices), self.processed_paths[0])
