@@ -57,18 +57,21 @@ class NNDataset(InMemoryDataset):
                     data.num_nodes = sum(design)
 
                     # TODO: data.x
+                    data.x = torch.ones((data.num_nodes, 1), dtype=torch.float32)
+                    # shape fixes this error https://stackoverflow.com/questions/67481937/indexerror-dimension-out-of-range-expected-to-be-in-range-of-1-0-but-got
 
                     # Sparse adjacency matrix
-                    data.edge_index = torch.zeros((2, 0))
+                    data.edge_index = torch.zeros((2, 0), dtype=torch.long)
 
                     lb = 0      # lower bound
                     for index, height in enumerate(design[:-1]):
                         for i in range(height):
                             for j in range(height, height + design[index + 1]):
-                                new_col = torch.tensor([[lb + i], [lb + j]])
+                                new_col = torch.tensor(
+                                    [[lb + i], [lb + j]], dtype=torch.long)
                                 if not(EDGES_DIRECTED):
                                     new_col = torch.cat(
-                                        (new_col, torch.tensor([[lb + j], [lb + i]])), axis=1)
+                                        (new_col, torch.tensor([[lb + j], [lb + i]], dtype=torch.long)), axis=1)
 
                                 data.edge_index = torch.cat(
                                     (data.edge_index, new_col), axis=1)
@@ -80,24 +83,28 @@ class NNDataset(InMemoryDataset):
                     for index, height in enumerate(design[:-1]):
                         for i in range(height):
                             weights = weights_file.readline()
-                            weights = np.fromstring(weights, dtype=float, sep=', ')
+                            weights = np.fromstring(
+                                weights, dtype=np.float32, sep=', ')
                             data.y_edge = torch.cat(
                                 (data.y_edge, torch.tensor(weights)))
 
                     # Node y
-                    data.y_node = torch.zeros(0)
+                    data.y_node = torch.zeros(0, dtype=torch.float32)
                     for index, height in enumerate(design):
                         # First rows do not have biases -> all zero
                         if (index == 0):
                             data.y_node = torch.cat(
-                                (data.y_node, torch.zeros(height)))
+                                (data.y_node, torch.zeros(height, dtype=torch.float32)))
                             continue
 
                         # Read biases values line by line
                         biases = biases_file.readline()
-                        biases = np.fromstring(biases, dtype=float, sep=', ')
+                        biases = np.fromstring(
+                            biases, dtype=np.float32, sep=', ')
                         biases = torch.from_numpy(biases)
                         data.y_node = torch.cat((data.y_node, biases))
+
+                    data.y_node = data.y_node.reshape([-1, 1])
 
                     data_list.append(data)
 
