@@ -1,8 +1,9 @@
 # Downloaded libraries
+from webbrowser import GenericBrowser
 import torch
 from torch import nn
 import torch.nn.functional as F
-from torch_geometric.nn import GCNConv
+from torch_geometric.nn import GATConv, GCNConv
 from torch_geometric.loader import DataLoader
 
 
@@ -10,16 +11,21 @@ from torch_geometric.loader import DataLoader
 from dataset_graphs import NNDataset
 
 
+# Constants
+TRAINING_SPLIT = 0.8
+
+
 # Hyperparameters
-num_epoch = 15
+num_epoch = 50
 batch_size = 16
 
 
 class Bias_PredGCN(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = GCNConv(1, 32)
-        self.conv2 = GCNConv(32, 1)
+        self.conv1 = GCNConv(500, 256)
+        self.conv2 = GCNConv(256, 64)
+        self.conv3 = GCNConv(64, 1)
 
     def forward(self, data):
         x, edge_index = data.x, data.edge_index
@@ -27,7 +33,12 @@ class Bias_PredGCN(nn.Module):
         x = self.conv1(x, edge_index)
         x = F.relu(x)
         x = F.dropout(x, training=self.training)
+
         x = self.conv2(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, training=self.training)
+
+        x = self.conv3(x, edge_index)
 
         return x
 
@@ -37,7 +48,7 @@ if __name__ == "__main__":
     nndataset = NNDataset(root="")
 
     size = len(nndataset)
-    train_num = int(size * 0.8)
+    train_num = int(size * TRAINING_SPLIT)
     test_num = size - train_num
 
     train_loader = DataLoader(dataset=nndataset[:train_num], batch_size=batch_size, shuffle=True)
@@ -65,11 +76,11 @@ if __name__ == "__main__":
             loss.backward()
             optimizer.step()
 
-            # Print status every 5 batches
+            # Print status every n batches
             if i % 10 == 0:
                 loss, current = loss.item(), i * batch_size
-                print(f"Training Loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
-
+                print(f"Training Loss: {loss:>7f}  [{current:>5d}/{train_num:>5d}]")
+    print("Training complete")
 
     # Model Evaluation
     model.eval()
@@ -82,3 +93,6 @@ if __name__ == "__main__":
 
         loss = loss.item()
         print(f"Validation Loss: {loss:>7f}")
+
+    torch.save(model.state_dict(), "./model/model")
+    print("Model saved")

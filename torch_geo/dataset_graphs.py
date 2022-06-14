@@ -6,7 +6,9 @@ from torch_geometric.data import Data, InMemoryDataset
 
 ### Constants ###
 EDGES_DIRECTED = False
-SOURCES = ["dataset_1/", "dataset_2/", "dataset_3/"]
+SOURCES = ["dataset_0/", "dataset_1/",
+           "dataset_2/", "dataset_3/", "dataset_4/"]
+NUM_SAMPLES = 500
 
 
 class NNDataset(InMemoryDataset):
@@ -25,7 +27,7 @@ class NNDataset(InMemoryDataset):
     def download(self):
         print("Data download not implemented")
         print("Do you have the correct files at /data folder?")
-        exit(1)
+        raise Exception("Dataset not configured correctly") 
 
     def process(self):
         if (EDGES_DIRECTED):
@@ -44,39 +46,21 @@ class NNDataset(InMemoryDataset):
 
             targets = np.genfromtxt(path + "data_targets.csv", delimiter=',')
 
-            designs = self.read_designs(path + "model_designs.txt")
+            designs = read_designs(path + "model_designs.txt")
             print(f"{len(designs)} models loaded")
 
             with open(path + "model_weights.txt", 'r') as weights_file, open(path + "model_biases.txt", 'r') as biases_file:
                 for design in designs:
                     # One design is one neural network graph
-                    data = Data()
-                    data.design = design
+                    data = graph_from_design(design)
 
-                    # Node input info
-                    data.num_nodes = sum(design)
+                    # Data x, beware this error https://stackoverflow.com/questions/67481937/indexerror-dimension-out-of-range-expected-to-be-in-range-of-1-0-but-got
+                    data.x = np.zeros((data.num_nodes, NUM_SAMPLES))
+                    
+                    data.x[0:design[0]] = features.T        # input layer
+                    data.x[-design[-1]:] = targets.T        # output layer
 
-                    # TODO: data.x
-                    data.x = torch.ones((data.num_nodes, 1), dtype=torch.float32)
-                    # shape fixes this error https://stackoverflow.com/questions/67481937/indexerror-dimension-out-of-range-expected-to-be-in-range-of-1-0-but-got
-
-                    # Sparse adjacency matrix
-                    data.edge_index = torch.zeros((2, 0), dtype=torch.long)
-
-                    lb = 0      # lower bound
-                    for index, height in enumerate(design[:-1]):
-                        for i in range(height):
-                            for j in range(height, height + design[index + 1]):
-                                new_col = torch.tensor(
-                                    [[lb + i], [lb + j]], dtype=torch.long)
-                                if not(EDGES_DIRECTED):
-                                    new_col = torch.cat(
-                                        (new_col, torch.tensor([[lb + j], [lb + i]], dtype=torch.long)), axis=1)
-
-                                data.edge_index = torch.cat(
-                                    (data.edge_index, new_col), axis=1)
-
-                        lb += height
+                    data.x = torch.tensor(data.x, dtype=torch.float32)
 
                     # Edge y
                     data.y_edge = torch.zeros(0)
@@ -117,25 +101,55 @@ class NNDataset(InMemoryDataset):
         data, slices = self.collate(data_list)
         torch.save((data, slices), self.processed_paths[0])
 
-    def read_designs(self, path):
-        """Reads array of designs from given path"""
 
-        designs = []
-        with open(path, 'r') as f:
-            lines = f.readlines()
-            for line in lines:
-                design = []
+def read_designs(path):
+    """Reads array of designs from given path"""
 
-                line = line.rstrip("\n")
-                line = line.split(', ')
+    designs = []
+    with open(path, 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            design = []
 
-                for num in line:
-                    try:
-                        if num:
-                            design.append(int(num))
-                    except ValueError:
-                        print(f"Warning: Cannot append [{num}]")
+            line = line.rstrip("\n")
+            line = line.split(', ')
 
-                designs.append(design)
+            for num in line:
+                try:
+                    if num:
+                        design.append(int(num))
+                except ValueError:
+                    print(f"Warning: Cannot append [{num}]")
 
-        return designs
+            designs.append(design)
+
+    return designs
+
+
+def graph_from_design(design):
+    # One design is one neural network graph
+    graph = Data()
+    graph.design = design
+
+    # Node input info
+    graph.num_nodes = sum(design)
+
+    # Sparse adjacency matrix
+    graph.edge_index = torch.zeros((2, 0), dtype=torch.long)
+
+    lb = 0      # lower bound
+    for index, height in enumerate(design[:-1]):
+        for i in range(height):
+            for j in range(height, height + design[index + 1]):
+                new_col = torch.tensor(
+                    [[lb + i], [lb + j]], dtype=torch.long)
+                if not(EDGES_DIRECTED):
+                    new_col = torch.cat(
+                        (new_col, torch.tensor([[lb + j], [lb + i]], dtype=torch.long)), axis=1)
+
+                graph.edge_index = torch.cat(
+                    (graph.edge_index, new_col), axis=1)
+
+        lb += height
+
+    return graph
