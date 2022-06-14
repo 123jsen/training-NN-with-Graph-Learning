@@ -2,6 +2,7 @@
 from webbrowser import GenericBrowser
 import torch
 from torch import nn
+from torch.nn import Linear
 import torch.nn.functional as F
 from torch_geometric.nn import GATConv, GCNConv
 from torch_geometric.loader import DataLoader
@@ -25,7 +26,8 @@ class Bias_PredGCN(nn.Module):
         super().__init__()
         self.conv1 = GCNConv(500, 256)
         self.conv2 = GCNConv(256, 64)
-        self.conv3 = GCNConv(64, 1)
+        self.denseB = Linear(64, 1)
+        self.denseW = Linear(64, 1)
 
     def forward(self, data):
         x, edge_index = data.x, data.edge_index
@@ -38,9 +40,16 @@ class Bias_PredGCN(nn.Module):
         x = F.relu(x)
         x = F.dropout(x, training=self.training)
 
-        x = self.conv3(x, edge_index)
+        # Linear layer for biases pred
+        biases = self.denseB(x)
 
-        return x
+        # Edge contains sum of adj nodes: https://github.com/pyg-team/pytorch_geometric/discussions/3554
+        src, dst = data.edge_index
+        src, dst = src[::2], dst[::2]       # skip repeated edges
+        weights = (x[src] + x[dst]) / 2
+        weights = self.denseW(weights)
+
+        return weights, biases
 
 if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -68,8 +77,8 @@ if __name__ == "__main__":
             data.to(device)
 
             # forward propagation
-            out = model(data)
-            loss = loss_fn(out, data.y_node)
+            out_w, out_b = model(data)
+            loss = loss_fn(out_b, data.y_node) + loss_fn(out_w, data.y_edge)
 
             # backpropagation
             optimizer.zero_grad()
@@ -88,8 +97,8 @@ if __name__ == "__main__":
         data = iter(test_loader).next().to(device)
 
         # forward propagation
-        out = model(data)
-        loss = loss_fn(out, data.y_node)
+        out_w, out_b = model(data)
+        loss = loss_fn(out_b, data.y_node) + loss_fn(out_w, data.y_edge)
 
         loss = loss.item()
         print(f"Validation Loss: {loss:>7f}")

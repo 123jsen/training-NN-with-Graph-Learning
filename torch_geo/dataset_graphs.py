@@ -50,7 +50,7 @@ class NNDataset(InMemoryDataset):
             print(f"{len(designs)} models loaded")
 
             with open(path + "model_weights.txt", 'r') as weights_file, open(path + "model_biases.txt", 'r') as biases_file:
-                for design in designs:
+                for i, design in enumerate(designs):
                     # One design is one neural network graph
                     data = graph_from_design(design)
 
@@ -71,6 +71,8 @@ class NNDataset(InMemoryDataset):
                                 weights, dtype=np.float32, sep=', ')
                             data.y_edge = torch.cat(
                                 (data.y_edge, torch.tensor(weights)))
+
+                    data.y_edge = data.y_edge.reshape([-1, 1])
 
                     # Node y
                     data.y_node = torch.zeros(0, dtype=torch.float32)
