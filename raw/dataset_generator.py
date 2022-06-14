@@ -29,6 +29,11 @@ def generate_dataset(n_features, n_informative, n_redundant, n_classes, weights,
     print(f"Saving to {target_dir}data_targets.csv")
     np.savetxt(target_dir + "data_targets.csv", target, delimiter=", ")
 
+    with open(target_dir + "data_meta.txt", "w") as f:
+        f.write("n_samples, n_features, n_informative, n_redundant, n_classes, weights")
+        f.write("\n")
+        f.write(f"{SAMPLES}, {n_features}, {n_informative}, {n_redundant}, {n_classes}, {weights}")
+
 
 # Main Function
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 ### Imports ###
 import random
+import os
 import numpy as np
 import keras
 from keras.models import Sequential
@@ -91,6 +92,15 @@ def prepare_model_data(num_models=10, target_dir="./dataset_1/"):
             with open(target_dir + 'model_biases.txt', 'a') as biases_file:
                 np.savetxt(biases_file, weights[1], newline=", ")
                 biases_file.write("\n")
+
+        # Metadata
+        if not(os.path.isfile(target_dir + 'model_meta.txt')):
+             with open(target_dir + 'model_meta.txt', 'w') as meta_file:
+                meta_file.write("loss, accuracy")
+                meta_file.write("\n")
+
+        with open(target_dir + 'model_meta.txt', 'a') as meta_file:
+            meta_file.write(f"{history.history['loss'][-1]}, {history.history['accuracy'][-1]}\n")
 
         print("Model data written to file")
 
