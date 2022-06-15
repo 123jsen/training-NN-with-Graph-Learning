@@ -34,14 +34,14 @@ class Trainer_GCN(nn.Module):
         return weights, biases
 
 class Simple_NN(nn.Module):
-    def __init__(self):
+    def __init__(self, input_size, output_size):
         super(Simple_NN, self).__init__()
         self.linear_relu_stack = nn.Sequential(
-            nn.Linear(3, 32),
+            nn.Linear(input_size, 32),
             nn.ReLU(),
             nn.Linear(32, 32),
             nn.ReLU(),
-            nn.Linear(32, 2)
+            nn.Linear(32, output_size)
         )
 
     def forward(self, x):

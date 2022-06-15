@@ -27,7 +27,7 @@ class NNDataset(InMemoryDataset):
     def download(self):
         print("Data download not implemented")
         print("Do you have the correct files at /data folder?")
-        raise Exception("Dataset not configured correctly") 
+        raise Exception("Dataset not configured correctly")
 
     def process(self):
         if (EDGES_DIRECTED):
@@ -54,13 +54,8 @@ class NNDataset(InMemoryDataset):
                     # One design is one neural network graph
                     data = graph_from_design(design)
 
-                    # Data x, beware this error https://stackoverflow.com/questions/67481937/indexerror-dimension-out-of-range-expected-to-be-in-range-of-1-0-but-got
-                    data.x = np.zeros((data.num_nodes, NUM_SAMPLES))
-                    
-                    data.x[0:design[0]] = features.T        # input layer
-                    data.x[-design[-1]:] = targets.T        # output layer
-
-                    data.x = torch.tensor(data.x, dtype=torch.float32)
+                    # Node x
+                    populate_node_x(data, design, features, targets)
 
                     # Edge y
                     data.y_edge = torch.zeros(0)
@@ -129,7 +124,8 @@ def read_designs(path):
 
 
 def graph_from_design(design):
-    # One design is one neural network graph
+    '''Produces graph data object from a given design array'''
+
     graph = Data()
     graph.design = design
 
@@ -155,3 +151,15 @@ def graph_from_design(design):
         lb += height
 
     return graph
+
+
+def populate_node_x(data, design, features, targets):
+    '''Configure data.x to contain input data'''
+
+    # Data x, beware this error https://stackoverflow.com/questions/67481937/indexerror-dimension-out-of-range-expected-to-be-in-range-of-1-0-but-got
+    data.x = np.random.normal(size=(data.num_nodes, NUM_SAMPLES))
+
+    data.x[0:design[0]] = features.T        # input layer
+    data.x[-design[-1]:] = targets.T        # output layer
+
+    data.x = torch.tensor(data.x, dtype=torch.float32)
