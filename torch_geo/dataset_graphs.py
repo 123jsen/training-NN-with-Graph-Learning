@@ -87,6 +87,10 @@ class NNDataset(InMemoryDataset):
 
                     data.y_node = data.y_node.reshape([-1, 1])
 
+                    # Mask for comparing Node y
+                    data.input_mask = torch.ones((data.num_nodes, 1), dtype=int)
+                    data.input_mask[:data.design[0]] = torch.zeros((data.design[0], 1), dtype=torch.int)
+
                     data_list.append(data)
 
         if self.pre_filter is not None:
@@ -163,3 +167,6 @@ def populate_node_x(data, design, features, targets):
     data.x[-design[-1]:] = targets.T        # output layer
 
     data.x = torch.tensor(data.x, dtype=torch.float32)
+
+if __name__ == "__main__":
+    NNDataset(root="")

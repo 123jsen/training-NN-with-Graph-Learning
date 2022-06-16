@@ -1,7 +1,9 @@
+import torch
 from torch import nn
 from torch.nn import Linear
 import torch.nn.functional as F
 from torch_geometric.nn import GCNConv
+
 
 class Trainer_GCN(nn.Module):
     def __init__(self):
@@ -24,6 +26,8 @@ class Trainer_GCN(nn.Module):
 
         # Linear layer for biases pred
         biases = self.denseB(x)
+        # Set all biases on input layer to zero
+        biases *= data.input_mask
 
         # Edge contains sum of adj nodes: https://github.com/pyg-team/pytorch_geometric/discussions/3554
         src, dst = data.edge_index
@@ -32,6 +36,7 @@ class Trainer_GCN(nn.Module):
         weights = self.denseW(weights)
 
         return weights, biases
+
 
 class Simple_NN(nn.Module):
     def __init__(self, input_size, output_size):
