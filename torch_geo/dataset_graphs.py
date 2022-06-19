@@ -88,8 +88,7 @@ class NNDataset(InMemoryDataset):
                     data.y_node = data.y_node.reshape([-1, 1])
 
                     # Mask for comparing Node y
-                    data.input_mask = torch.ones((data.num_nodes, 1), dtype=int)
-                    data.input_mask[:data.design[0]] = torch.zeros((data.design[0], 1), dtype=torch.int)
+                    data.input_mask = mask_from_graph(data)
 
                     data_list.append(data)
 
@@ -161,12 +160,36 @@ def populate_node_x(data, design, features, targets):
     '''Configure data.x to contain input data'''
 
     # Data x, beware this error https://stackoverflow.com/questions/67481937/indexerror-dimension-out-of-range-expected-to-be-in-range-of-1-0-but-got
-    data.x = np.random.normal(size=(data.num_nodes, NUM_SAMPLES))
 
-    data.x[0:design[0]] = features.T        # input layer
+    # First NUM_SAMPLES encode training data information (input, output, or none)
+    # Next 4 encodes: is_input, is_output, column, row
+
+    data.x = np.zeros((data.num_nodes, NUM_SAMPLES))
+
+    data.x[:design[0]] = features.T        # input layer
     data.x[-design[-1]:] = targets.T        # output layer
+
+    # np.pad directions: [(Up, Down), (Left, Right)]
+    data.x = np.pad(data.x, [(0, 0), (0, 4)])
+
+    data.x[:design[0], NUM_SAMPLES + 0] = 1
+    data.x[-design[-1]:, NUM_SAMPLES + 1] = 1
+
+    count = 0
+    for i, height in enumerate(design):
+        for j in range(height):
+            data.x[count, NUM_SAMPLES + 2] = i
+            data.x[count, NUM_SAMPLES + 3] = j
+            count += 1
 
     data.x = torch.tensor(data.x, dtype=torch.float32)
 
+def mask_from_graph(data):
+    mask = torch.ones((data.num_nodes, 1), dtype=int)
+    mask[:data.design[0]] = torch.zeros((data.design[0], 1), dtype=torch.int)
+
+    return mask
+
 if __name__ == "__main__":
     NNDataset(root="")
+
