@@ -9,7 +9,7 @@ SAMPLES = 500
 
 
 # Functions
-def generate_dataset(n_features, n_informative, n_redundant, n_classes, weights, target_dir="./dataset_1/"):
+def generate_classification_dataset(n_features, n_informative, n_redundant, n_classes, weights, target_dir="./dataset_1/"):
     print(f"Generating {SAMPLES} samples")
     print(f"Input Size: {n_features}, Output Size: {n_classes}")
 
@@ -37,7 +37,7 @@ def generate_dataset(n_features, n_informative, n_redundant, n_classes, weights,
 
 # Main Function
 if __name__ == "__main__":
-    generate_dataset(n_features=3,
+    generate_classification_dataset(n_features=3,
                      n_informative=3,
                      n_redundant=0,
                      n_classes=2,
