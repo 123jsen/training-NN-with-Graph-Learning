@@ -8,7 +8,7 @@ from torch_geometric.nn import GCNConv
 class Trainer_GCN(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = GCNConv(504, 256)
+        self.conv1 = GCNConv(503, 256)
         self.conv2 = GCNConv(256, 64)
         self.denseB = Linear(64, 1)
         self.denseW = Linear(64, 1)

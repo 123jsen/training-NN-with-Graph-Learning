@@ -6,8 +6,8 @@ from torch_geometric.data import Data, InMemoryDataset
 
 ### Constants ###
 EDGES_DIRECTED = False
-SOURCES = ["dataset_0/", "dataset_1/",
-           "dataset_2/", "dataset_3/", "dataset_4/"]
+SOURCES = ["dataset_0/", "dataset_1/", "dataset_2/",
+           "dataset_3/", "dataset_4/", "dataset_5/"]
 NUM_SAMPLES = 500
 
 
@@ -47,50 +47,35 @@ class NNDataset(InMemoryDataset):
             targets = np.genfromtxt(path + "data_targets.csv", delimiter=',')
 
             designs = read_designs(path + "model_designs.txt")
-            print(f"{len(designs)} models loaded")
 
-            with open(path + "model_weights.txt", 'r') as weights_file, open(path + "model_biases.txt", 'r') as biases_file:
+            with open(path + "model_weights.txt", 'r') as weights_file, \
+                    open(path + "model_biases.txt", 'r') as biases_file, \
+                    open(path + "model_init_biases.txt", 'r') as init_biases_file, \
+                    open(path + "model_init_weights.txt", 'r') as init_weights_file:
+
                 for i, design in enumerate(designs):
                     # One design is one neural network graph
-                    data = graph_from_design(design)
+                    graph = graph_from_design(design)
 
                     # Node x
-                    populate_node_x(data, design, features, targets)
+                    fill_node_x(graph, design, init_biases_file,
+                                features, targets)
 
-                    # Edge y
-                    data.y_edge = torch.zeros(0)
-                    for index, height in enumerate(design[:-1]):
-                        for i in range(height):
-                            weights = weights_file.readline()
-                            weights = np.fromstring(
-                                weights, dtype=np.float32, sep=', ')
-                            data.y_edge = torch.cat(
-                                (data.y_edge, torch.tensor(weights)))
-
-                    data.y_edge = data.y_edge.reshape([-1, 1])
+                    # Edge x
+                    fill_edge_x(graph, design, init_weights_file)
 
                     # Node y
-                    data.y_node = torch.zeros(0, dtype=torch.float32)
-                    for index, height in enumerate(design):
-                        # First rows do not have biases -> all zero
-                        if (index == 0):
-                            data.y_node = torch.cat(
-                                (data.y_node, torch.zeros(height, dtype=torch.float32)))
-                            continue
+                    fill_node_y(graph, design, biases_file)
 
-                        # Read biases values line by line
-                        biases = biases_file.readline()
-                        biases = np.fromstring(
-                            biases, dtype=np.float32, sep=', ')
-                        biases = torch.from_numpy(biases)
-                        data.y_node = torch.cat((data.y_node, biases))
-
-                    data.y_node = data.y_node.reshape([-1, 1])
+                    # Edge y
+                    fill_edge_y(graph, design, weights_file)
 
                     # Mask for comparing Node y
-                    data.input_mask = mask_from_graph(data)
+                    graph.input_mask = mask_from_graph(graph)
 
-                    data_list.append(data)
+                    data_list.append(graph)
+
+            print(f"{len(designs)} models loaded")
 
         if self.pre_filter is not None:
             data_list = [data for data in data_list if self.pre_filter(data)]
@@ -156,33 +141,77 @@ def graph_from_design(design):
     return graph
 
 
-def populate_node_x(data, design, features, targets):
-    '''Configure data.x to contain input data'''
+def fill_node_x(graph, design, file, features, targets):
+    '''Configure graph.x to contain input data'''
 
     # Data x, beware this error https://stackoverflow.com/questions/67481937/indexerror-dimension-out-of-range-expected-to-be-in-range-of-1-0-but-got
 
     # First NUM_SAMPLES encode training data information (input, output, or none)
-    # Next 4 encodes: is_input, is_output, column, row
+    # Next 3 encodes: is_input, is_output, initial_bias
 
-    data.x = np.zeros((data.num_nodes, NUM_SAMPLES))
+    graph.x = np.zeros((graph.num_nodes, NUM_SAMPLES))
 
-    data.x[:design[0]] = features.T        # input layer
-    data.x[-design[-1]:] = targets.T        # output layer
+    graph.x[:design[0]] = features.T        # input layer
+    graph.x[-design[-1]:] = targets.T        # output layer
 
     # np.pad directions: [(Up, Down), (Left, Right)]
-    data.x = np.pad(data.x, [(0, 0), (0, 4)])
+    graph.x = np.pad(graph.x, [(0, 0), (0, 3)])
 
-    data.x[:design[0], NUM_SAMPLES + 0] = 1
-    data.x[-design[-1]:, NUM_SAMPLES + 1] = 1
+    graph.x[:design[0], NUM_SAMPLES + 0] = 1
+    graph.x[-design[-1]:, NUM_SAMPLES + 1] = 1
 
-    count = 0
-    for i, height in enumerate(design):
+    # load initial biases from file
+    graph.x[:design[0], NUM_SAMPLES + 2] = 0
+
+    graph.x = torch.tensor(graph.x, dtype=torch.float32)
+
+    init_biases = torch.zeros(0, dtype=torch.float32)
+    for i in range(len(design[1:])):
+        bias = file.readline()
+        bias = np.fromstring(
+            bias, dtype=np.float32, sep=', ')
+        bias = torch.from_numpy(bias)
+        init_biases = torch.cat((init_biases, bias))
+
+    graph.x[design[0]:, NUM_SAMPLES + 2] = init_biases
+
+
+
+def fill_edge_x(graph, design, file):
+    pass
+
+
+def fill_node_y(graph, design, file):
+    graph.y_node = torch.zeros(0, dtype=torch.float32)
+    for index, height in enumerate(design):
+        # First rows do not have biases -> all zero
+        if (index == 0):
+            graph.y_node = torch.cat(
+                (graph.y_node, torch.zeros(height, dtype=torch.float32)))
+            continue
+
+        # Read biases values line by line
+        biases = file.readline()
+        biases = np.fromstring(
+            biases, dtype=np.float32, sep=', ')
+        biases = torch.from_numpy(biases)
+        graph.y_node = torch.cat((graph.y_node, biases))
+
+    graph.y_node = graph.y_node.reshape([-1, 1])
+
+
+def fill_edge_y(graph, design, file):
+    graph.y_edge = torch.zeros(0)
+    for index, height in enumerate(design[:-1]):
         for j in range(height):
-            data.x[count, NUM_SAMPLES + 2] = i
-            data.x[count, NUM_SAMPLES + 3] = j
-            count += 1
+            weights = file.readline()
+            weights = np.fromstring(
+                weights, dtype=np.float32, sep=', ')
+            graph.y_edge = torch.cat(
+                (graph.y_edge, torch.tensor(weights)))
 
-    data.x = torch.tensor(data.x, dtype=torch.float32)
+    graph.y_edge = graph.y_edge.reshape([-1, 1])
+
 
 def mask_from_graph(data):
     mask = torch.ones((data.num_nodes, 1), dtype=int)
@@ -190,6 +219,6 @@ def mask_from_graph(data):
 
     return mask
 
+
 if __name__ == "__main__":
     NNDataset(root="")
-

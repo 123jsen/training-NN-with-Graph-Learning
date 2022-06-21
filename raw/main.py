@@ -31,7 +31,7 @@ weights = [[0.33, 0.67],
 if __name__ == "__main__":
     '''This program creates a lot of datasets and models for the training of the GNN'''
 
-    for i in range(5):
+    for i in range(NUM_DATASETS):
         # Create folder if it doesnt exists
         path = f"./raw/dataset_{i}/"
         os.makedirs(path, exist_ok=True)
