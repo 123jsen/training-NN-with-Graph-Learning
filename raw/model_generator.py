@@ -141,17 +141,15 @@ def save_model_data(target_dir, design, model, loss, acc):
     with open(target_dir + 'model_meta.txt', 'a') as meta_file:
         meta_file.write(f"{loss}, {acc}\n")
 
-    return
-    
-    for layer in model.layers:
-        weights = layer.get_weights()
-        # Weights
+    # Weights and Biases
+    for i in range(len(model.layers)):
+        weights = model.state_dict()[f"layers.{i}.weight"].cpu()
         with open(target_dir + 'model_weights.txt', 'a') as weights_file:
-            np.savetxt(weights_file, weights[0], delimiter=", ")
+            np.savetxt(weights_file, weights.T, delimiter=", ")
 
-        # Biases
+        biases = model.state_dict()[f"layers.{i}.bias"].cpu()
         with open(target_dir + 'model_biases.txt', 'a') as biases_file:
-            np.savetxt(biases_file, weights[1], newline=", ")
+            np.savetxt(biases_file, biases.T, newline=", ")
             biases_file.write("\n")
 
 
