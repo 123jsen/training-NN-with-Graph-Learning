@@ -34,7 +34,7 @@ if __name__ == "__main__":
     for i in range(5):
         # Create folder if it doesnt exists
         path = f"./raw/dataset_{i}/"
-        os.makedirs(path, exist_ok=False)
+        os.makedirs(path, exist_ok=True)
 
         generate_classification_dataset(n_features=features[i],
                          n_informative=informative[i],

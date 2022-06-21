@@ -2,6 +2,7 @@
 import numpy as np
 from sklearn.datasets import make_classification
 from keras.utils import to_categorical
+from os.path import exists
 
 
 # Constants
@@ -10,6 +11,14 @@ SAMPLES = 500
 
 # Functions
 def generate_classification_dataset(n_features, n_informative, n_redundant, n_classes, weights, target_dir="./dataset_1/"):
+
+    features_exists = exists(target_dir + "data_features.csv")
+    target_exists = exists(target_dir + "data_targets.csv")
+
+    if (features_exists and target_exists):
+        print(f"dataset_generator: files already exists at {target_dir}")
+        return
+
     print(f"Generating {SAMPLES} samples")
     print(f"Input Size: {n_features}, Output Size: {n_classes}")
 
