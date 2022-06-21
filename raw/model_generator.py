@@ -125,13 +125,25 @@ def test_model(dataloader, model, loss_fn):
 
 
 # Related to Saving data
-def save_model_data(target_dir, design, model, loss, acc):
-
+def save_model_start_data(target_dir, design, model):
     # Design
     with open(target_dir + 'model_designs.txt', 'a') as designs_file:
         np.savetxt(designs_file, design, fmt="%d, ", newline="")
         designs_file.write("\n")
 
+    # Weights and Biases
+    for i in range(len(model.layers)):
+        weights = model.state_dict()[f"layers.{i}.weight"].cpu()
+        with open(target_dir + 'model_init_weights.txt', 'a') as weights_file:
+            np.savetxt(weights_file, weights.T, delimiter=", ")
+
+        biases = model.state_dict()[f"layers.{i}.bias"].cpu()
+        with open(target_dir + 'model_init_biases.txt', 'a') as biases_file:
+            np.savetxt(biases_file, biases.T, newline=", ")
+            biases_file.write("\n")
+
+
+def save_model_result_data(target_dir, model, loss, acc):
     # Metadata
     if not(os.path.isfile(target_dir + 'model_meta.txt')):
         with open(target_dir + 'model_meta.txt', 'w') as meta_file:
@@ -171,7 +183,9 @@ def generate_model_data(num_models=10, target_dir="./dataset_1/"):
 
         # This part trains the model
         design, model = rand_model(input_size, output_size)
-        print(f"Design = {design}")
+        print(f"Design | {design}")
+
+        save_model_start_data(target_dir, design, model)
 
         loss_fn = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
@@ -183,7 +197,7 @@ def generate_model_data(num_models=10, target_dir="./dataset_1/"):
 
         print(f"Training done | loss: {loss:.5f} | acc: {acc:.5f}")
 
-        save_model_data(target_dir, design, model, loss, acc)
+        save_model_result_data(target_dir, model, loss, acc)
 
         print("Model data written to file")
 
