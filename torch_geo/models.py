@@ -14,13 +14,13 @@ class Trainer_GCN(nn.Module):
         self.denseW = Linear(64, 1)
 
     def forward(self, data):
-        x, edge_index = data.x, data.edge_index
+        x, edge_index, edge_attr = data.x, data.edge_index, data.edge_weight
 
-        x = self.conv1(x, edge_index)
+        x = self.conv1(x, edge_index, edge_attr)
         x = F.relu(x)
         x = F.dropout(x, training=self.training)
 
-        x = self.conv2(x, edge_index)
+        x = self.conv2(x, edge_index, edge_attr)
         x = F.relu(x)
         x = F.dropout(x, training=self.training)
 
@@ -31,7 +31,8 @@ class Trainer_GCN(nn.Module):
 
         # Edge contains sum of adj nodes: https://github.com/pyg-team/pytorch_geometric/discussions/3554
         src, dst = data.edge_index
-        src, dst = src[::2], dst[::2]       # skip repeated edges
+        if not(data.is_directed()):
+            src, dst = src[::2], dst[::2]       # skip repeated edges for undirected graph
         weights = (x[src] + x[dst]) / 2
         weights = self.denseW(weights)
 

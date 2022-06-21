@@ -5,7 +5,7 @@ from torch_geometric.data import Data, InMemoryDataset
 
 
 ### Constants ###
-EDGES_DIRECTED = False
+EDGES_DIRECTED = True
 SOURCES = ["dataset_0/", "dataset_1/", "dataset_2/",
            "dataset_3/", "dataset_4/", "dataset_5/"]
 NUM_SAMPLES = 500
@@ -178,7 +178,16 @@ def fill_node_x(graph, design, file, features, targets):
 
 
 def fill_edge_x(graph, design, file):
-    pass
+    graph.edge_weight = torch.zeros(0)
+    for index, height in enumerate(design[:-1]):
+        for j in range(height):
+            weights = file.readline()
+            weights = np.fromstring(
+                weights, dtype=np.float32, sep=', ')
+            graph.edge_weight = torch.cat(
+                (graph.edge_weight, torch.tensor(weights)))
+
+    graph.edge_weight = graph.edge_weight.reshape([-1, 1])
 
 
 def fill_node_y(graph, design, file):
