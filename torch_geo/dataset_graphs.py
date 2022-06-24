@@ -5,7 +5,7 @@ from torch_geometric.data import Data, InMemoryDataset
 
 
 ### Constants ###
-EDGES_DIRECTED = True
+EDGES_DIRECTED = True       # The Graph can be changed to undirected using PyG transforms
 SOURCES = ["dataset_0/", "dataset_1/", "dataset_2/",
            "dataset_3/", "dataset_4/", "dataset_5/"]
 NUM_SAMPLES = 500
@@ -30,10 +30,6 @@ class NNDataset(InMemoryDataset):
         raise Exception("Dataset not configured correctly")
 
     def process(self):
-        if (EDGES_DIRECTED):
-            print("Graph is Directed")
-        else:
-            print("Graph is Undirected")
 
         data_list = []
 
@@ -129,9 +125,6 @@ def graph_from_design(design):
             for j in range(height, height + design[index + 1]):
                 new_col = torch.tensor(
                     [[lb + i], [lb + j]], dtype=torch.long)
-                if not(EDGES_DIRECTED):
-                    new_col = torch.cat(
-                        (new_col, torch.tensor([[lb + j], [lb + i]], dtype=torch.long)), axis=1)
 
                 graph.edge_index = torch.cat(
                     (graph.edge_index, new_col), axis=1)
