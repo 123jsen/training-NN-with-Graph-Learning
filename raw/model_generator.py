@@ -21,14 +21,14 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device} device\n")
 
 ### Constants ###
-MAX_DEPTH = 5
+MAX_DEPTH = 1
 LAYER_HEIGHTS = (4, 8, 16, 32, 64, 96)
 
 
 ### Parameters ###
 num_epochs = 50
 batch_size = 32
-test_size = 200
+test_size = 200     # number of data samples used to calculate accuracy of model
 
 
 ### Functions ###

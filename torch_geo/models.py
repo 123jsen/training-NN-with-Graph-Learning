@@ -8,35 +8,41 @@ from torch_geometric.nn import GATConv
 class Trainer_GCN(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = GATConv(in_channels=503, out_channels=32, edge_dim=1)
-        # self.conv2 = GATConv(in_channels=256, out_channels=64, edge_dim=1)
-        self.denseB = Linear(32, 1)
-        self.denseW = Linear(32, 1)
+        self.conv1 = GATConv(in_channels=503, out_channels=128, edge_dim=1)
+        self.conv2 = GATConv(in_channels=128, out_channels=128, edge_dim=1)
+
+        self.dense_1B = Linear(128, 1)
+        # self.dense_2B = Linear(32, 1)
+
+
+        self.dense_1W = Linear(128, 1)
+        # self.dense_2W = Linear(32, 1)
 
     def forward(self, data):
         x, edge_index, edge_attr = data.x, data.edge_index, data.edge_weight
 
         x = self.conv1(x, edge_index, edge_attr)
         x = F.relu(x)
-        # x = F.dropout(x, training=self.training)
 
-        # x = self.conv2(x, edge_index, edge_attr)
-        # x = F.relu(x)
-        # x = F.dropout(x, training=self.training)
+        x = self.conv2(x, edge_index, edge_attr)
+        x = F.relu(x)
+        
 
         # Linear layer for biases pred
-        biases = self.denseB(x)
+        b = self.dense_1B(x)
+        # b = self.dense_2B(b)
         # Set all biases on input layer to zero
-        biases *= data.input_mask
+        b *= data.input_mask
 
         # Edge contains sum of adj nodes: https://github.com/pyg-team/pytorch_geometric/discussions/3554
         src, dst = data.edge_index
         if not(data.is_directed()):
             src, dst = src[::2], dst[::2]       # skip repeated edges for undirected graph
-        weights = (x[src] + x[dst]) / 2
-        weights = self.denseW(weights)
+        w = (x[src] + x[dst]) / 2
+        w = self.dense_1W(w)
+        # w = self.dense_2W(w)
 
-        return weights, biases
+        return w, b
 
 
 class Simple_NN(nn.Module):

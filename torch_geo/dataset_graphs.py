@@ -7,7 +7,8 @@ from torch_geometric.data import Data, InMemoryDataset
 ### Constants ###
 EDGES_DIRECTED = True       # The Graph can be changed to undirected using PyG transforms
 SOURCES = ["dataset_0/", "dataset_1/", "dataset_2/",
-           "dataset_3/", "dataset_4/", "dataset_5/"]
+           "dataset_3/", "dataset_4/", "dataset_5/",
+           "dataset_6/", "dataset_7/", "dataset_8/"]
 NUM_SAMPLES = 500
 
 
