@@ -149,12 +149,12 @@ def save_model_start_data(target_dir, design, model):
 def save_model_result_data(target_dir, model, loss, acc):
     """Save the training metrics and final weights and biases"""
     # Metadata
-    if not(os.path.isfile(target_dir + 'model_meta.txt')):
-        with open(target_dir + 'model_meta.txt', 'w') as meta_file:
+    if not(os.path.isfile(target_dir + 'model_metrics.txt')):
+        with open(target_dir + 'model_metrics.txt', 'w') as meta_file:
             meta_file.write("loss, accuracy")
             meta_file.write("\n")
 
-    with open(target_dir + 'model_meta.txt', 'a') as meta_file:
+    with open(target_dir + 'model_metrics.txt', 'a') as meta_file:
         meta_file.write(f"{loss}, {acc}\n")
 
     # Weights and Biases
