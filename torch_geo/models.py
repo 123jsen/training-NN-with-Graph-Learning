@@ -6,6 +6,7 @@ from torch_geometric.nn import GATConv
 
 
 class Trainer_GCN(nn.Module):
+    '''Main focus of the project: GCN that trains NN'''
     def __init__(self):
         super().__init__()
         self.conv1 = GATConv(in_channels=503, out_channels=128, edge_dim=1)
@@ -46,6 +47,7 @@ class Trainer_GCN(nn.Module):
 
 
 class Simple_NN(nn.Module):
+    '''Simple dense neural net model for comparison'''
     def __init__(self, input_size, output_size):
         super(Simple_NN, self).__init__()
         self.linear_relu_stack = nn.Sequential(

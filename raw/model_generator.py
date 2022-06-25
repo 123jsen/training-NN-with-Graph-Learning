@@ -35,9 +35,9 @@ test_size = 200     # number of data samples used to calculate accuracy of model
 
 # Related to Model Generation
 class Dense_net(nn.Module):
-    '''Creates dense NN given a particular design'''
 
     def __init__(self, design):
+        '''Creates dense NN given a particular design'''
         super(Dense_net, self).__init__()
         self.design = design
 
@@ -64,12 +64,14 @@ def rand_design(num_input=10, num_output=10):
 
 
 def rand_model(num_input=10, num_output=10):
+    '''Returns a random dense neural net model'''
     design = rand_design(num_input, num_output)
     return design, Dense_net(design).to(device)
 
 
 # Related to Model Training
 class ClassificationDataset(Dataset):
+    '''PyTorch dataset object for classification training data'''
     def __init__(self, dest_dir):
         self.features = np.genfromtxt(
             dest_dir + 'data_features.csv', delimiter=', ')
@@ -126,6 +128,7 @@ def test_model(dataloader, model, loss_fn):
 
 # Related to Saving data
 def save_model_start_data(target_dir, design, model):
+    """Save the design and starting weights and biases"""
     # Design
     with open(target_dir + 'model_designs.txt', 'a') as designs_file:
         np.savetxt(designs_file, design, fmt="%d, ", newline="")
@@ -144,6 +147,7 @@ def save_model_start_data(target_dir, design, model):
 
 
 def save_model_result_data(target_dir, model, loss, acc):
+    """Save the training metrics and final weights and biases"""
     # Metadata
     if not(os.path.isfile(target_dir + 'model_meta.txt')):
         with open(target_dir + 'model_meta.txt', 'w') as meta_file:

@@ -11,7 +11,7 @@ SAMPLES = 500
 
 # Functions
 def generate_classification_dataset(n_features, n_informative, n_redundant, n_classes, weights, target_dir="./dataset_1/"):
-
+    """Generate classification problem dataset using sklearn"""
     features_exists = exists(target_dir + "data_features.csv")
     target_exists = exists(target_dir + "data_targets.csv")
 

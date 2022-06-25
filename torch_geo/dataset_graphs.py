@@ -170,7 +170,6 @@ def fill_node_x(graph, design, file, features, targets):
     graph.x[design[0]:, NUM_SAMPLES + 2] = init_biases
 
 
-
 def fill_edge_x(graph, design, file):
     graph.edge_weight = torch.zeros(0)
     for index, height in enumerate(design[:-1]):

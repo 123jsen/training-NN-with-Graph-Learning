@@ -3,6 +3,7 @@ import torch
 from torch.utils.data import Dataset
 
 class ClassificationData(Dataset):
+    ''''''
     def __init__(self, dir, transform=None, target_transform=None):
         self.features = np.genfromtxt(dir + "data_features.csv", delimiter = ", ")
         self.features = torch.tensor(self.features, dtype=torch.float32)
