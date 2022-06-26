@@ -1,6 +1,5 @@
 ### Imports ###
-from asyncio.windows_events import NULL
-from msilib.schema import Class
+from datasets.class_data import ClassificationDataset
 import random
 import os
 import numpy as np
@@ -15,7 +14,6 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
-from torch.utils.data import Dataset
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device} device\n")
@@ -67,25 +65,6 @@ def rand_model(num_input=10, num_output=10):
     '''Returns a random dense neural net model'''
     design = rand_design(num_input, num_output)
     return design, Dense_net(design).to(device)
-
-
-# Related to Model Training
-class ClassificationDataset(Dataset):
-    '''PyTorch dataset object for classification training data'''
-    def __init__(self, dest_dir):
-        self.features = np.genfromtxt(
-            dest_dir + 'data_features.csv', delimiter=', ')
-        self.features = torch.tensor(self.features, dtype=torch.float32)
-
-        self.targets = np.genfromtxt(
-            dest_dir + 'data_targets.csv', delimiter=', ')
-        self.targets = torch.tensor(self.targets, dtype=torch.float32)
-
-    def __len__(self):
-        return len(self.features)
-
-    def __getitem__(self, index):
-        return self.features[index], self.targets[index]
 
 
 def train_model(dataloader, model, loss_fn, optimizer):
