@@ -69,7 +69,7 @@ class NNDataset(InMemoryDataset):
                     fill_edge_y(graph, design, weights_file)
 
                     # Mask for comparing Node y
-                    graph.input_mask = mask_from_graph(graph)
+                    graph.node_mask = mask_from_graph(graph)
 
                     data_list.append(graph)
 
@@ -172,25 +172,25 @@ def fill_node_x(graph, design, file, features, targets):
 
 
 def fill_edge_x(graph, design, file):
-    graph.edge_weight = torch.zeros(0)
+    graph.edge_attr = torch.zeros(0)
     for index, height in enumerate(design[:-1]):
         for j in range(height):
             weights = file.readline()
             weights = np.fromstring(
                 weights, dtype=np.float32, sep=', ')
-            graph.edge_weight = torch.cat(
-                (graph.edge_weight, torch.tensor(weights)))
+            graph.edge_attr = torch.cat(
+                (graph.edge_attr, torch.tensor(weights)))
 
-    graph.edge_weight = graph.edge_weight.reshape([-1, 1])
+    graph.edge_attr = graph.edge_attr.reshape([-1, 1])
 
 
 def fill_node_y(graph, design, file):
-    graph.y_node = torch.zeros(0, dtype=torch.float32)
+    graph.node_y = torch.zeros(0, dtype=torch.float32)
     for index, height in enumerate(design):
         # First rows do not have biases -> all zero
         if (index == 0):
-            graph.y_node = torch.cat(
-                (graph.y_node, torch.zeros(height, dtype=torch.float32)))
+            graph.node_y = torch.cat(
+                (graph.node_y, torch.zeros(height, dtype=torch.float32)))
             continue
 
         # Read biases values line by line
@@ -198,22 +198,22 @@ def fill_node_y(graph, design, file):
         biases = np.fromstring(
             biases, dtype=np.float32, sep=', ')
         biases = torch.from_numpy(biases)
-        graph.y_node = torch.cat((graph.y_node, biases))
+        graph.node_y = torch.cat((graph.node_y, biases))
 
-    graph.y_node = graph.y_node.reshape([-1, 1])
+    graph.node_y = graph.node_y.reshape([-1, 1])
 
 
 def fill_edge_y(graph, design, file):
-    graph.y_edge = torch.zeros(0)
+    graph.edge_y = torch.zeros(0)
     for index, height in enumerate(design[:-1]):
         for j in range(height):
             weights = file.readline()
             weights = np.fromstring(
                 weights, dtype=np.float32, sep=', ')
-            graph.y_edge = torch.cat(
-                (graph.y_edge, torch.tensor(weights)))
+            graph.edge_y = torch.cat(
+                (graph.edge_y, torch.tensor(weights)))
 
-    graph.y_edge = graph.y_edge.reshape([-1, 1])
+    graph.edge_y = graph.edge_y.reshape([-1, 1])
 
 
 def mask_from_graph(data):

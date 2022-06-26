@@ -19,7 +19,7 @@ class TrainerGCN(nn.Module):
         # self.dense_2W = Linear(32, 1)
 
     def forward(self, data):
-        x, edge_index, edge_attr = data.x, data.edge_index, data.edge_weight
+        x, edge_index, edge_attr = data.x, data.edge_index, data.edge_attr
 
         x = self.conv1(x, edge_index, edge_attr)
         x = F.relu(x)
@@ -32,7 +32,7 @@ class TrainerGCN(nn.Module):
         b = self.dense_1B(x)
         # b = self.dense_2B(b)
         # Set all biases on input layer to zero
-        b *= data.input_mask
+        b *= data.node_mask
 
         # Edge contains sum of adj nodes: https://github.com/pyg-team/pytorch_geometric/discussions/3554
         src, dst = data.edge_index
