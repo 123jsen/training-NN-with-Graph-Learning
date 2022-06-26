@@ -12,11 +12,8 @@ class TrainerGCN(nn.Module):
         self.conv2 = GATConv(in_channels=128, out_channels=128, edge_dim=1)
 
         self.dense_1B = Linear(128, 1)
-        # self.dense_2B = Linear(32, 1)
-
 
         self.dense_1W = Linear(128, 1)
-        # self.dense_2W = Linear(32, 1)
 
     def forward(self, data):
         x, edge_index, edge_attr = data.x, data.edge_index, data.edge_attr
@@ -30,7 +27,6 @@ class TrainerGCN(nn.Module):
 
         # Linear layer for biases pred
         b = self.dense_1B(x)
-        # b = self.dense_2B(b)
         # Set all biases on input layer to zero
         b *= data.node_mask
 
@@ -40,6 +36,5 @@ class TrainerGCN(nn.Module):
             src, dst = src[::2], dst[::2]       # skip repeated edges for undirected graph
         w = (x[src] + x[dst]) / 2
         w = self.dense_1W(w)
-        # w = self.dense_2W(w)
 
         return w, b
