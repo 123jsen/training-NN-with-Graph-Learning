@@ -9,7 +9,8 @@ EDGES_DIRECTED = True       # The Graph can be changed to undirected using PyG t
 SOURCES = ["dataset_0/", "dataset_1/", "dataset_2/",
            "dataset_3/", "dataset_4/", "dataset_5/",
            "dataset_6/", "dataset_7/", "dataset_8/"]
-NUM_SAMPLES = 500
+
+from constants.constants import SAMPLES_PER_SET
 
 
 class NNDataset(InMemoryDataset):
@@ -27,7 +28,7 @@ class NNDataset(InMemoryDataset):
 
     def download(self):
         print("Data download not implemented")
-        print("Do you have the correct files at /data folder?")
+        print("Do you have the correct files at /raw folder?")
         raise Exception("Dataset not configured correctly")
 
     def process(self):
@@ -143,7 +144,7 @@ def fill_node_x(graph, design, file, features, targets):
     # First NUM_SAMPLES encode training data information (input, output, or none)
     # Next 3 encodes: is_input, is_output, initial_bias
 
-    graph.x = np.zeros((graph.num_nodes, NUM_SAMPLES))
+    graph.x = np.zeros((graph.num_nodes, SAMPLES_PER_SET))
 
     graph.x[:design[0]] = features.T        # input layer
     graph.x[-design[-1]:] = targets.T        # output layer
@@ -151,11 +152,11 @@ def fill_node_x(graph, design, file, features, targets):
     # np.pad directions: [(Up, Down), (Left, Right)]
     graph.x = np.pad(graph.x, [(0, 0), (0, 3)])
 
-    graph.x[:design[0], NUM_SAMPLES + 0] = 1
-    graph.x[-design[-1]:, NUM_SAMPLES + 1] = 1
+    graph.x[:design[0], SAMPLES_PER_SET + 0] = 1
+    graph.x[-design[-1]:, SAMPLES_PER_SET + 1] = 1
 
     # load initial biases from file
-    graph.x[:design[0], NUM_SAMPLES + 2] = 0
+    graph.x[:design[0], SAMPLES_PER_SET + 2] = 0
 
     graph.x = torch.tensor(graph.x, dtype=torch.float32)
 
@@ -167,7 +168,7 @@ def fill_node_x(graph, design, file, features, targets):
         bias = torch.from_numpy(bias)
         init_biases = torch.cat((init_biases, bias))
 
-    graph.x[design[0]:, NUM_SAMPLES + 2] = init_biases
+    graph.x[design[0]:, SAMPLES_PER_SET + 2] = init_biases
 
 
 def fill_edge_x(graph, design, file):

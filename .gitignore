@@ -128,12 +128,12 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Datasets
-/raw/dataset*/
+# Graph Datasets
+/raw
 /processed
 
 # Trained model
-/model
+/trained_model
 
 # Testing
 test.ipynb

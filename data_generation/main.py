@@ -5,9 +5,7 @@ from dataset_generator import generate_classification_dataset
 
 
 # Constants
-SAMPLES = 500
-MAX_OUTPUT_NUM = 10
-MODELS_PER_SET = 200
+from constants.constants import SAMPLES_PER_SET, MODELS_PER_SET
 
 # Data parameters
 features = [3, 4, 6, 7, 4, 9, 8, 5, 4]
@@ -38,12 +36,13 @@ if __name__ == "__main__":
         path = f"./raw/dataset_{i}/"
         os.makedirs(path, exist_ok=True)
 
-        generate_classification_dataset(n_features=features[i],
-                         n_informative=informative[i],
-                         n_redundant=redundant[i],
-                         n_classes=classes[i],
-                         weights=weights[i],
-                         target_dir=path)
+        generate_classification_dataset(n_samples=SAMPLES_PER_SET,
+                                        n_features=features[i],
+                                        n_informative=informative[i],
+                                        n_redundant=redundant[i],
+                                        n_classes=classes[i],
+                                        weights=weights[i],
+                                        target_dir=path)
 
         generate_model_data(num_models=MODELS_PER_SET,
-                           target_dir=path)
+                            target_dir=path)
