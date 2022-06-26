@@ -38,12 +38,3 @@ def generate_classification_dataset(n_samples, n_features, n_informative, n_redu
         f.write("n_samples, n_features, n_informative, n_redundant, n_classes, weights")
         f.write("\n")
         f.write(f"{n_samples}, {n_features}, {n_informative}, {n_redundant}, {n_classes}, {weights}")
-
-
-# Main Function
-if __name__ == "__main__":
-    generate_classification_dataset(n_features=3,
-                     n_informative=3,
-                     n_redundant=0,
-                     n_classes=2,
-                     weights=[0.33, 0.67])

@@ -2,6 +2,7 @@
 import numpy as np
 import torch
 from torch_geometric.data import Data, InMemoryDataset
+from utility.text2graph import read_designs
 
 
 ### Constants ###
@@ -84,31 +85,6 @@ class NNDataset(InMemoryDataset):
         data, slices = self.collate(data_list)
         torch.save((data, slices), self.processed_paths[0])
 
-
-def read_designs(path):
-    """Reads array of designs from given path"""
-
-    designs = []
-    with open(path, 'r') as f:
-        lines = f.readlines()
-        for line in lines:
-            design = []
-
-            line = line.rstrip("\n")
-            line = line.split(', ')
-
-            for num in line:
-                try:
-                    if num:
-                        design.append(int(num))
-                except ValueError:
-                    print(f"Warning: Cannot append [{num}]")
-
-            designs.append(design)
-
-    return designs
-
-
 def graph_from_design(design):
     '''Produces graph data object from a given design array'''
 
@@ -138,11 +114,6 @@ def graph_from_design(design):
 
 def fill_node_x(graph, design, file, features, targets):
     '''Configure graph.x to contain input data'''
-
-    # Data x, beware this error https://stackoverflow.com/questions/67481937/indexerror-dimension-out-of-range-expected-to-be-in-range-of-1-0-but-got
-
-    # First NUM_SAMPLES encode training data information (input, output, or none)
-    # Next 3 encodes: is_input, is_output, initial_bias
 
     graph.x = np.zeros((graph.num_nodes, SAMPLES_PER_SET))
 
@@ -185,14 +156,9 @@ def fill_edge_x(graph, design, file):
 
 
 def fill_node_y(graph, design, file):
-    graph.node_y = torch.zeros(0, dtype=torch.float32)
-    for index, height in enumerate(design):
-        # First rows do not have biases -> all zero
-        if (index == 0):
-            graph.node_y = torch.cat(
-                (graph.node_y, torch.zeros(height, dtype=torch.float32)))
-            continue
+    graph.node_y = torch.zeros(design[0], dtype=torch.float32)
 
+    for index, height in enumerate(design[1:]):
         # Read biases values line by line
         biases = file.readline()
         biases = np.fromstring(
@@ -221,7 +187,3 @@ def mask_from_graph(data):
     mask[:data.design[0]] = torch.zeros((data.design[0], 1), dtype=torch.int)
 
     return mask
-
-
-if __name__ == "__main__":
-    NNDataset(root="")

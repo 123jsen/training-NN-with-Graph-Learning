@@ -1,5 +1,4 @@
 ### Imports ###
-from datasets.class_data import ClassificationDataset
 import random
 import os
 import numpy as np
@@ -8,10 +7,11 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader
 
+# Imports from custom packages
+from utility.model2text import write_design, write_weights, write_metrics
 from models.dense_nets import DenseNet
+from datasets.class_data import ClassificationDataset
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
-print(f"Using {device} device\n")
 
 ### Constants ###
 MAX_DEPTH = 1
@@ -23,8 +23,12 @@ num_epochs = 50
 batch_size = 32
 test_size = 200     # number of data samples used to calculate accuracy of model
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
+print(f"Using {device} device\n")
+
 
 ### Functions ###
+
 
 # Related to Model Generation
 def rand_design(num_input=10, num_output=10):
@@ -40,6 +44,7 @@ def rand_model(num_input=10, num_output=10):
     return design, DenseNet(design).to(device)
 
 
+# Related to Model Training
 def train_model(dataloader, model, loss_fn, optimizer):
     '''Function which trains model'''
     model.train()
@@ -78,50 +83,7 @@ def test_model(dataloader, model, loss_fn):
         return loss, acc
 
 
-# Related to Saving data
-def save_model_start_data(target_dir, design, model):
-    """Save the design and starting weights and biases"""
-    # Design
-    with open(target_dir + 'model_designs.txt', 'a') as designs_file:
-        np.savetxt(designs_file, design, fmt="%d, ", newline="")
-        designs_file.write("\n")
-
-    # Weights and Biases
-    for i in range(len(model.layers)):
-        weights = model.state_dict()[f"layers.{i}.weight"].cpu()
-        with open(target_dir + 'model_init_weights.txt', 'a') as weights_file:
-            np.savetxt(weights_file, weights.T, delimiter=", ")
-
-        biases = model.state_dict()[f"layers.{i}.bias"].cpu()
-        with open(target_dir + 'model_init_biases.txt', 'a') as biases_file:
-            np.savetxt(biases_file, biases.T, newline=", ")
-            biases_file.write("\n")
-
-
-def save_model_result_data(target_dir, model, loss, acc):
-    """Save the training metrics and final weights and biases"""
-    # Metadata
-    if not(os.path.isfile(target_dir + 'model_metrics.txt')):
-        with open(target_dir + 'model_metrics.txt', 'w') as meta_file:
-            meta_file.write("loss, accuracy")
-            meta_file.write("\n")
-
-    with open(target_dir + 'model_metrics.txt', 'a') as meta_file:
-        meta_file.write(f"{loss}, {acc}\n")
-
-    # Weights and Biases
-    for i in range(len(model.layers)):
-        weights = model.state_dict()[f"layers.{i}.weight"].cpu()
-        with open(target_dir + 'model_weights.txt', 'a') as weights_file:
-            np.savetxt(weights_file, weights.T, delimiter=", ")
-
-        biases = model.state_dict()[f"layers.{i}.bias"].cpu()
-        with open(target_dir + 'model_biases.txt', 'a') as biases_file:
-            np.savetxt(biases_file, biases.T, newline=", ")
-            biases_file.write("\n")
-
-
-def generate_model_data(num_models=10, target_dir="./dataset_1/"):
+def generate_model_data(num_models=10, target_dir="./dataset_0/"):
     '''Read the data from the csv files, trains a bunch of NNs, and store them at the folder'''
 
     dataset = ClassificationDataset(dest_dir=target_dir)
@@ -137,11 +99,13 @@ def generate_model_data(num_models=10, target_dir="./dataset_1/"):
         print()
         print(f"Generating the {i+1}-th model")
 
-        # This part trains the model
         design, model = rand_model(input_size, output_size)
         print(f"Design | {design}")
 
-        save_model_start_data(target_dir, design, model)
+        write_design(target_dir + "model_designs.txt", design)
+        write_weights(target_dir + "model_init_weights.txt",
+                      target_dir + "model_init_biases.txt",
+                      design)
 
         loss_fn = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
@@ -153,11 +117,9 @@ def generate_model_data(num_models=10, target_dir="./dataset_1/"):
 
         print(f"Training done | loss: {loss:.5f} | acc: {acc:.5f}")
 
-        save_model_result_data(target_dir, model, loss, acc)
+        write_weights(target_dir + "model_weights.txt",
+                      target_dir + "model_biases.txt",
+                      design)
+        write_metrics(target_dir + "model_metrics.txt", loss, acc)
 
         print("Model data written to file")
-
-
-### Main Function ###
-if __name__ == "__main__":
-    generate_model_data(num_models=10)
