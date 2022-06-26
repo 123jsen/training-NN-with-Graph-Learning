@@ -1,11 +1,10 @@
-import torch
 from torch import nn
 from torch.nn import Linear
 import torch.nn.functional as F
 from torch_geometric.nn import GATConv
 
 
-class Trainer_GCN(nn.Module):
+class TrainerGCN(nn.Module):
     '''Main focus of the project: GCN that trains NN'''
     def __init__(self):
         super().__init__()
@@ -44,23 +43,3 @@ class Trainer_GCN(nn.Module):
         # w = self.dense_2W(w)
 
         return w, b
-
-
-class Simple_NN(nn.Module):
-    '''Simple dense neural net model for comparison'''
-    def __init__(self, input_size, output_size):
-        super(Simple_NN, self).__init__()
-        self.linear_relu_stack = nn.Sequential(
-            nn.Linear(input_size, 32),
-            nn.ReLU(),
-            nn.Linear(32, 32),
-            nn.ReLU(),
-            nn.Linear(32, output_size)
-        )
-
-    def forward(self, x):
-        logits = self.linear_relu_stack(x)
-        return logits
-
-        # Note: Softmax is not needed for cost calculation
-        # Only apply softmax when doing inferencing

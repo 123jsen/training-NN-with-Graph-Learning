@@ -4,16 +4,11 @@ import random
 import os
 import numpy as np
 
-""" import keras
-from keras.models import Sequential
-from keras.layers import Dense, Input
-from keras.optimizers import Adam
-from keras.losses import CategoricalCrossentropy """
-
 import torch
 from torch import nn
-from torch.nn import functional as F
 from torch.utils.data import DataLoader
+
+from models.dense_nets import DenseNet
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device} device\n")
@@ -32,28 +27,6 @@ test_size = 200     # number of data samples used to calculate accuracy of model
 ### Functions ###
 
 # Related to Model Generation
-class Dense_net(nn.Module):
-
-    def __init__(self, design):
-        '''Creates dense NN given a particular design'''
-        super(Dense_net, self).__init__()
-        self.design = design
-
-        # Note: using a for loop will not work by itself, see https://discuss.pytorch.org/t/using-for-loops-in-net-initialization/19817
-        self.layers = [None for i in range(len(self.design) - 1)]
-        for i in range(len(self.design) - 1):
-            self.layers[i] = nn.Linear(design[i], design[i+1])
-
-        self.layers = nn.ModuleList(self.layers)
-
-    def forward(self, x):
-        for layer in self.layers[:-1]:
-            x = layer(x)
-            x = F.relu(x)
-        x = self.layers[-1](x)
-        return x
-
-
 def rand_design(num_input=10, num_output=10):
     '''Returns a tuple representing layers height'''
     depth = random.randrange(MAX_DEPTH) + 1
@@ -64,7 +37,7 @@ def rand_design(num_input=10, num_output=10):
 def rand_model(num_input=10, num_output=10):
     '''Returns a random dense neural net model'''
     design = rand_design(num_input, num_output)
-    return design, Dense_net(design).to(device)
+    return design, DenseNet(design).to(device)
 
 
 def train_model(dataloader, model, loss_fn, optimizer):
