@@ -1,6 +1,5 @@
 ### Imports ###
 import random
-import os
 import numpy as np
 
 import torch
@@ -15,13 +14,13 @@ from datasets.class_data import ClassificationDataset
 
 ### Constants ###
 MAX_DEPTH = 1
-LAYER_HEIGHTS = (4, 8, 16, 32, 64, 96)
+LAYER_HEIGHTS = (4, 6, 8, 12, 16, 24, 32, 48, 64, 72, 96, 128)
 
 
 ### Parameters ###
-num_epochs = 50
-batch_size = 32
-test_size = 200     # number of data samples used to calculate accuracy of model
+num_epochs = 35
+batch_size = 64
+test_size = 100     # number of data samples used to calculate accuracy of model
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device} device\n")
@@ -105,7 +104,7 @@ def generate_model_data(num_models=10, target_dir="./dataset_0/"):
         write_design(target_dir + "model_designs.txt", design)
         write_weights(target_dir + "model_init_weights.txt",
                       target_dir + "model_init_biases.txt",
-                      design)
+                      model)
 
         loss_fn = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
@@ -119,7 +118,7 @@ def generate_model_data(num_models=10, target_dir="./dataset_0/"):
 
         write_weights(target_dir + "model_weights.txt",
                       target_dir + "model_biases.txt",
-                      design)
+                      model)
         write_metrics(target_dir + "model_metrics.txt", loss, acc)
 
         print("Model data written to file")
